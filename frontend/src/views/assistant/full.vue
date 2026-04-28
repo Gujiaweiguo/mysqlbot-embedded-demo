@@ -24,13 +24,13 @@ const userFlag = computed(() => {
   return userStore.getUid
 })
 const init = () => {
-  const js_name_prefix = 'xpack_static/sqlbot-embedded-dynamic.umd.js'
+  const js_name_prefix = 'sqlbot-embedded-dynamic.umd.js'
   const existScriptDom = document.querySelector(`script[src*="/${js_name_prefix}"]`)
   if (!existScriptDom) {
     const script = document.createElement('script');
     script.defer = true;
     script.async = true;
-    script.src = `${sqlbotDomain.value}/xpack_static/sqlbot-embedded-dynamic.umd.js?t=${Date.now()}`;
+    script.src = `${sqlbotDomain.value}/sqlbot-embedded-dynamic.umd.js?t=${Date.now()}`;
     document.head.appendChild(script);
   }
   const param = {
@@ -77,7 +77,7 @@ onBeforeUnmount(() => {
     if (window.sqlbot_embedded_handler) {
       delete window.sqlbot_embedded_handler
     }
-    const js_name_prefix = 'xpack_static/sqlbot-embedded-dynamic.umd.js'
+    const js_name_prefix = 'sqlbot-embedded-dynamic.umd.js'
     const existScriptDom = document.querySelector(`script[src*="/${js_name_prefix}"]`)
     if (existScriptDom) {
       if (isArray(existScriptDom)) {
