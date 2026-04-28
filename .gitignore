@@ -24,3 +24,8 @@ dist-ssr
 *.sw?
 .vscode
 dist
+
+# Local AI/tool artifacts
+.playwright-mcp/
+.opencode/
+openspec/
