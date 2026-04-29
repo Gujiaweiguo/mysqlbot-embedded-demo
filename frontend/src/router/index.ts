@@ -69,8 +69,7 @@ const asyncRoutes: RouteRecordRaw[] = [
     meta: {
       title: '高级小助手',
       icon: 'DataLine',
-      requireAdvancedAssistant: true,
-      requireOnline: true
+      requireAdvancedAssistant: true
     },
     children: [
       {
@@ -124,10 +123,11 @@ const asyncRoutes: RouteRecordRaw[] = [
 // 过滤动态路由的函数
 const filterAsyncRoutes = (routes: RouteRecordRaw[]) => {
   return routes.filter(route => {
-    if (route.meta?.requireBaseAssistant && !settingStore.getBaseAssistantId) {
+    const hasDomain = !!settingStore.getDomain
+    if (route.meta?.requireBaseAssistant && (!hasDomain || !settingStore.getBaseAssistantId)) {
       return false
     }
-    if (route.meta?.requireAdvancedAssistant && !settingStore.getAdvancedAssistantId) {
+    if (route.meta?.requireAdvancedAssistant && (!hasDomain || !settingStore.getAdvancedAssistantId)) {
       return false
     }
     if (route.meta?.requireOnline && !userStore.getOnline) {
@@ -168,7 +168,11 @@ router.beforeEach(async (to, _from, next) => {
     await setupRouter()
     next({ ...to, replace: true })
   } else {
-    isValidRoute(to.path) && next() || next('/')
+    if (isValidRoute(to.path)) {
+      next()
+    } else {
+      next('/')
+    }
   }
 })
 
