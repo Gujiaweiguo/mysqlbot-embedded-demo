@@ -1,26 +1,14 @@
 const Sales = require('../models/sales');
 const Setting = require('../models/setting');
 const crypto = require('crypto');
-const generateRandomString = (length = 32) =>  {
-  let result = '';
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const charactersLength = characters.length;
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-  return result;
-}
+const SQLBOT_SIMPLE_AES_IV = 'sqlbot_em_aes_iv'
 const aes_encrypt = (text, key) => {
-  const prefix = 'sqlbot-aesiv-pre-'
-  const prefixBuffer = Buffer.from(prefix)
-  const iv = generateRandomString(16)
-  const keyBuffer = Buffer.from(key);
-  const ivBuffer = Buffer.from(iv);
+  const keyBuffer = Buffer.from(String(key).slice(0, 32).padEnd(32, '\0'));
+  const ivBuffer = Buffer.from(SQLBOT_SIMPLE_AES_IV.slice(0, 16).padEnd(16, '\0'));
   const cipher = crypto.createCipheriv('aes-256-cbc', keyBuffer, ivBuffer);
   let encrypted = cipher.update(text, 'utf8', 'base64');
   encrypted += cipher.final('base64');
-  const result = Buffer.concat([prefixBuffer, ivBuffer, Buffer.from(encrypted, 'base64')]);
-  return result.toString('base64')
+  return encrypted
 }
 const aes_encrypt_fields = ['host', 'user', 'password', 'dataBase', 'schema']
 const dsController = {
