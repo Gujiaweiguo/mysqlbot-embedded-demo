@@ -26,6 +26,9 @@ const userFlag = computed(() => {
   return uid + 1
 })
 const init = () => {
+  if (!sqlbotDomain.value || !assistantId.value) {
+    return
+  }
   let srcUrl = `${sqlbotDomain.value}/assistant.js?id=${assistantId.value}`;
   if (online.value) {
     srcUrl += `&online=${online.value}&userFlag=${userFlag.value}`
@@ -58,6 +61,8 @@ onBeforeUnmount(() => {
   if (handler && handler[assistantId.value]) {
     handler[assistantId.value].destroy()
   }
+  const script = document.getElementById(`sqlbot-assistant-float-script-${assistantId.value}`)
+  script?.parentNode?.removeChild(script)
 })
 </script>
 

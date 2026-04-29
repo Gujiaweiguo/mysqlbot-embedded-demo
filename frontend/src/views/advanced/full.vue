@@ -85,6 +85,9 @@ const handleEmbeddedMessage = (event: MessageEvent) => {
   }
 }
 const init = () => {
+  if (!sqlbotDomain.value || !assistantId.value) {
+    return
+  }
   const root = document.querySelector('.advanced-full-page') as HTMLElement | null
   if (!root) {
     return
