@@ -15,21 +15,49 @@ const settingController = {
 
   async saveSetting(req, res, next) {
     try {
-      const { domain, base_assistant_id, advanced_assistant_id, embedded_app_id, embedded_app_secret, aes_enable, aes_key } = req.body;
+      const {
+        domain,
+        base_assistant_id,
+        advanced_assistant_id,
+        embedded_app_id,
+        embedded_app_secret,
+        base_embedded_app_id,
+        base_embedded_app_secret,
+        advanced_embedded_app_id,
+        advanced_embedded_app_secret,
+        aes_enable,
+        aes_key,
+        base_assistant_config,
+        advanced_assistant_config,
+      } = req.body;
       
-      // 验证必填字段
       if (!domain) {
         return res.status(400).json({
           success: false,
           message: 'Domain are required'
         });
       }
+      const payload = {
+        domain,
+        base_assistant_id,
+        advanced_assistant_id,
+        embedded_app_id,
+        embedded_app_secret,
+        base_embedded_app_id,
+        base_embedded_app_secret,
+        advanced_embedded_app_id,
+        advanced_embedded_app_secret,
+        aes_enable,
+        aes_key,
+        base_assistant_config,
+        advanced_assistant_config,
+      };
       let newSetting = null
       const setting = await Setting.getById(1)
       if (setting) {
-        newSetting = await Setting.update(1, { domain, base_assistant_id, advanced_assistant_id, embedded_app_id, embedded_app_secret, aes_enable, aes_key });
+        newSetting = await Setting.update(1, payload);
       } else {
-        newSetting = await Setting.create({ domain, base_assistant_id, advanced_assistant_id, embedded_app_id, embedded_app_secret, aes_enable, aes_key });
+        newSetting = await Setting.create(payload);
       }
       res.status(201).json({
         success: true,
