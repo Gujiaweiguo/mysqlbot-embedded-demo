@@ -1,24 +1,10 @@
-const { Pool } = require('pg');
 const pool = require('../config/db_pool');
+const datasourceRegistry = require('../providers');
 
 const { sales_ddl, sales_data_sql } = require('./business');
 
-const GS_SCRM_DATASOURCE_ID = '17';
-const GS_SCRM_DATABASE = process.env.GS_SCRM_DB_NAME || 'gs_scrm';
-const GS_SCRM_SCHEMA = process.env.GS_SCRM_SCHEMA || 'public';
-
-const gsScrmPool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: GS_SCRM_DATABASE,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT || 5432,
-  max: 5,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-});
-
-let gsScrmSchemaCache = null;
+require('../providers/gs_scrm');
+require('../providers/thxtd');
 
 const createTable = async () => {
   await pool.query(sales_ddl);
@@ -33,84 +19,39 @@ const initData = async () => {
   await pool.query(sales_data_sql);
 };
 
-const getGsScrmTables = async () => {
-  if (gsScrmSchemaCache) {
-    return gsScrmSchemaCache;
-  }
-
-  const tableResult = await gsScrmPool.query(
-    `
-      SELECT
-        c.relname AS table_name,
-        COALESCE(obj_description(c.oid, 'pg_class'), '') AS table_comment
-      FROM pg_class c
-      JOIN pg_namespace n ON n.oid = c.relnamespace
-      WHERE n.nspname = $1 AND c.relkind = 'r'
-      ORDER BY c.relname
-    `,
-    [GS_SCRM_SCHEMA]
-  );
-
-  const fieldResult = await gsScrmPool.query(
-    `
-      SELECT
-        c.relname AS table_name,
-        a.attname AS field_name,
-        pg_catalog.format_type(a.atttypid, a.atttypmod) AS field_type,
-        COALESCE(col_description(c.oid, a.attnum), '') AS field_comment
-      FROM pg_class c
-      JOIN pg_namespace n ON n.oid = c.relnamespace
-      JOIN pg_attribute a ON a.attrelid = c.oid
-      WHERE n.nspname = $1
-        AND c.relkind = 'r'
-        AND a.attnum > 0
-        AND NOT a.attisdropped
-      ORDER BY c.relname, a.attnum
-    `,
-    [GS_SCRM_SCHEMA]
-  );
-
-  const fieldsByTable = new Map();
-  fieldResult.rows.forEach(row => {
-    const fields = fieldsByTable.get(row.table_name) || [];
-    fields.push({
-      name: row.field_name,
-      comment: row.field_comment || row.field_name,
-      type: row.field_type ? String(row.field_type).toUpperCase() : '',
-    });
-    fieldsByTable.set(row.table_name, fields);
-  });
-
-  gsScrmSchemaCache = tableResult.rows.map(row => ({
-    name: row.table_name,
-    comment: row.table_comment || row.table_name,
-    fields: fieldsByTable.get(row.table_name) || [],
-  }));
-
-  return gsScrmSchemaCache;
-};
-
 // 初始化表
 createTable();
 
 const Sales = {
-  async getDsData(_account) {
-    const tables = await getGsScrmTables();
-    return [
-      {
-        id: GS_SCRM_DATASOURCE_ID,
-        name: 'GS SCRM',
-        type: 'pg',
-        host: process.env.DB_HOST,
-        port: process.env.DB_PORT,
-        dataBase: GS_SCRM_DATABASE,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        schema: GS_SCRM_SCHEMA,
-        comment: 'GS SCRM analytics datasource',
-        tables,
-      },
-    ];
+  async getDsData(_account, datasourceIds = null) {
+    const defaultProviders = datasourceRegistry.getDefaultProviders();
+    const selectedProviders = Array.isArray(datasourceIds) && datasourceIds.length
+      ? datasourceRegistry.findProvidersByIds(datasourceIds)
+      : defaultProviders;
+
+    const resolveProviders = async (providers, allowFallback = false) => {
+      const results = await Promise.allSettled(providers.map((provider) => provider.getDescriptor()));
+      const fulfilled = results
+        .filter((result) => result.status === 'fulfilled')
+        .map((result) => result.value);
+
+      if (fulfilled.length) {
+        return fulfilled;
+      }
+
+      const firstRejected = results.find((result) => result.status === 'rejected');
+      if (allowFallback && defaultProviders.length) {
+        console.warn('[datasource] selected providers failed, falling back to default providers', {
+          datasourceIds,
+          error: firstRejected?.reason?.message || String(firstRejected?.reason || 'unknown error'),
+        });
+        return resolveProviders(defaultProviders, false);
+      }
+
+      throw firstRejected?.reason || new Error('Failed to resolve datasource providers');
+    };
+
+    return resolveProviders(selectedProviders, Array.isArray(datasourceIds) && datasourceIds.length);
   },
 };
 
