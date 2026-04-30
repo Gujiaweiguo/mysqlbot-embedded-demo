@@ -18,6 +18,10 @@ const dsController = {
       const account = req.user?.account || 'developer'
       const datasourceIds = settingData?.advanced_assistant_config?.datasource_ids
       const dsList = await Sales.getDsData(account, Array.isArray(datasourceIds) ? datasourceIds : null)
+      // IMPORTANT: Shallow-clone before encrypting. Providers (e.g. thxtd.js) cache
+      // descriptor objects and return the same reference on every call. Without cloning,
+      // in-place AES encryption would corrupt the cache, causing double-encryption on
+      // subsequent requests and making SQLBot report "datasource invalid" at runtime.
       const responseDsList = Array.isArray(dsList)
         ? dsList.map((ds) => ({ ...ds }))
         : []
