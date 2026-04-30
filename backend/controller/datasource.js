@@ -14,14 +14,26 @@ const aes_encrypt_fields = ['host', 'user', 'password', 'dataBase', 'schema']
 const dsController = {
   async getDsList(req, res, next) {
     try {
-      const account = req.user?.account || 'developer'
-      const dsList = await Sales.getDsData(account)
       const settingData = await Setting.getById(1);
+      const account = req.user?.account || 'developer'
+      const datasourceIds = settingData?.advanced_assistant_config?.datasource_ids
+      const dsList = await Sales.getDsData(account, Array.isArray(datasourceIds) ? datasourceIds : null)
+      const responseDsList = Array.isArray(dsList)
+        ? dsList.map((ds) => ({ ...ds }))
+        : []
 
-      // 对敏感字段进行AES加密(可选)
-      if (dsList?.length && settingData?.aes_enable) {
-        const aes_key = settingData.aes_key
-        dsList.forEach(ds => {
+      let aes_enabled = false;
+      let aes_key = '';
+      if (settingData?.advanced_assistant_config?.aes_enable != null) {
+        aes_enabled = !!settingData.advanced_assistant_config.aes_enable;
+        aes_key = settingData.advanced_assistant_config.aes_key || '';
+      } else {
+        aes_enabled = !!settingData?.aes_enable;
+        aes_key = settingData?.aes_key || '';
+      }
+
+      if (responseDsList.length && aes_enabled) {
+        responseDsList.forEach(ds => {
           aes_encrypt_fields.forEach(fieldName => {
             const val = ds[fieldName]
             if (val) {
@@ -33,7 +45,7 @@ const dsController = {
       res.json({
         success: true,
         code: 0,
-        data: dsList
+        data: responseDsList
       });
     } catch (error) {
       next(error);
