@@ -7,7 +7,6 @@
 import { onMounted, onBeforeUnmount, computed, ref } from 'vue';
 import { useSettingStore } from '@/store/setting'
 import { useUserStore } from '@/store/user'
-import { isArray } from 'element-plus/es/utils/types.mjs';
 import Inactivate from '@/components/Inactivate.vue'
 
 const inactivateFontColor = ref('#FFFFFF')
@@ -23,69 +22,106 @@ const userFlag = computed(() => {
   }
   return userStore.getUid
 })
-const init = () => {
-  const js_name_prefix = 'sqlbot-embedded-dynamic.umd.js'
-  const existScriptDom = document.querySelector(`script[src*="/${js_name_prefix}"]`)
-  if (!existScriptDom) {
-    const script = document.createElement('script');
-    script.defer = true;
-    script.async = true;
-    script.src = `${sqlbotDomain.value}/sqlbot-embedded-dynamic.umd.js?t=${Date.now()}`;
-    document.head.appendChild(script);
+const iframeId = computed(() => `sqlbot-embedded-chat-iframe-${assistantId.value}`)
+const getTargetOrigin = () => new URL(sqlbotDomain.value).origin
+const getIframe = () => document.getElementById(iframeId.value) as HTMLIFrameElement | null
+const buildCertificate = () => {
+  const sourceVal = window.localStorage.getItem('sqlbot-embedded-token')
+  if (!sourceVal) {
+    return null
   }
-  const param = {
-    "embeddedId": assistantId.value,
-    "online": online.value
-  } as any
-  if (online.value) {
-    param['userFlag'] = userFlag.value
-  }
-  let sqlbot_embedded_timer = setInterval(() => {
-    if (window.sqlbot_embedded_handler?.mounted) {
-      window.sqlbot_embedded_handler.mounted(`.base-full-page`, param)
-      clearInterval(sqlbot_embedded_timer)
+  let token = sourceVal
+  try {
+    const parsed = JSON.parse(sourceVal)
+    if (parsed && typeof parsed.v === 'string') {
+      token = parsed.v
     }
-  }, 1000)
-  
+  } catch {
+    // keep raw storage value
+  }
+  return JSON.stringify([
+    {
+      target: 'header',
+      key: 'sqlbot-embedded-token',
+      value: `Bearer ${token}`,
+    },
+  ])
+}
+const postToIframe = (payload: Record<string, unknown>) => {
+  const iframe = getIframe()
+  if (!iframe?.contentWindow) {
+    return
+  }
+  iframe.contentWindow.postMessage(
+    {
+      eventName: 'sqlbot_embedded_event',
+      messageId: assistantId.value,
+      ...payload,
+    },
+    getTargetOrigin()
+  )
+}
+const handleEmbeddedMessage = (event: MessageEvent) => {
+  if (event.origin !== getTargetOrigin()) {
+    return
+  }
+  if (event.data?.eventName !== 'sqlbot_embedded_event') {
+    return
+  }
+  if (event.data?.messageId !== assistantId.value) {
+    return
+  }
+  if (event.data?.busi === 'ready' && event.data?.ready) {
+    const certificate = buildCertificate()
+    postToIframe({
+      hostOrigin: window.location.origin,
+      busi: 'certificate',
+      type: 1,
+      certificate,
+    })
+  }
+}
+const init = () => {
+  if (!sqlbotDomain.value || !assistantId.value) {
+    return
+  }
+  const root = document.querySelector('.base-full-page') as HTMLElement | null
+  if (!root) {
+    return
+  }
+  const iframe = document.createElement('iframe')
+  let srcUrl = `${sqlbotDomain.value}/#/embeddedPage?id=${assistantId.value}&online=${online.value}`
+  if (online.value) {
+    srcUrl += `&userFlag=${userFlag.value}`
+  }
+  iframe.id = iframeId.value
+  iframe.src = srcUrl
+  iframe.allow = "microphone;clipboard-read 'src'; clipboard-write 'src'"
+  iframe.style.width = '100%'
+  iframe.style.height = '100%'
+  iframe.style.border = '0'
+  const existingIframe = getIframe()
+  if (existingIframe) {
+    existingIframe.parentNode?.removeChild(existingIframe)
+  }
+  root.appendChild(iframe)
+  window.addEventListener('message', handleEmbeddedMessage)
 }
 const newChat = (param?: any) => {
-  const handler = window.sqlbot_embedded_handler
-  if (handler) {
-    handler.createConversation(assistantId.value, param)
-  }
+  postToIframe({ busi: 'createConversation', param })
 }
 const showHistory = () => {
   historyShow.value = !historyShow.value
-  const handler = window.sqlbot_embedded_handler
-  if (handler) {
-    handler.setHistory(assistantId.value, historyShow.value)
-  }
+  postToIframe({ busi: 'setHistory', show: historyShow.value })
 }
 onMounted(() => {
   init()
 })
 onBeforeUnmount(() => {
-  // remove some dom and reset some js object
-  if (window.sqlbot_embedded_handler?.destroy) {
-    window.sqlbot_embedded_handler.destroy(assistantId.value, true)
-  } else {
-    // programe never run here, just test code!
-    const dom = document.getElementById(`sqlbot-embedded-chat-iframe-${assistantId.value}`)
-    if (dom) {
-      dom.parentNode?.removeChild(dom)
-    }
-    if (window.sqlbot_embedded_handler) {
-      delete window.sqlbot_embedded_handler
-    }
-    const js_name_prefix = 'sqlbot-embedded-dynamic.umd.js'
-    const existScriptDom = document.querySelector(`script[src*="/${js_name_prefix}"]`)
-    if (existScriptDom) {
-      if (isArray(existScriptDom)) {
-        existScriptDom.forEach(ele => ele.parentNode?.removeChild(ele))
-      } else {
-        existScriptDom.parentNode?.removeChild(existScriptDom)
-      }
-    }
+  window.removeEventListener('message', handleEmbeddedMessage)
+  const dom = getIframe()
+  if (dom) {
+    dom.parentNode?.removeChild(dom)
   }
 })
 </script>
