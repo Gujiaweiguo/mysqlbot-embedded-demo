@@ -19,7 +19,6 @@ SQLBot 嵌入式对接 Demo，演示如何将 SQLBot 小助手以三种模式集
 | 前端 | Vue 3, TypeScript, Element Plus, Pinia, Vite |
 | 后端 | Express, PostgreSQL, jose (JWT) |
 | 测试 | Vitest (单元), Playwright (E2E) |
-| 部署 | Docker, docker-compose |
 
 ## 快速开始
 
@@ -93,8 +92,6 @@ sqlbot-embedded-demo/
 │   ├── server.js            # 服务入口
 │   └── package.json
 ├── e2e/                     # Playwright E2E 测试
-├── docker-compose.yml
-├── Dockerfile
 └── SQLBot嵌入式配置操作说明.md   # 详细配置指南
 ```
 
@@ -168,18 +165,6 @@ npx playwright test
 ```
 
 E2E 测试默认访问 `http://localhost:5180`，可通过 `E2E_BASE_URL` 环境变量修改。
-
-## 部署
-
-使用 Docker Compose：
-
-```bash
-docker-compose up -d
-```
-
-服务在容器内的 3000 端口启动，对外映射到主机的 3000 端口。`docker-compose.yml` 同级目录下需要创建 `.env` 文件配置数据库连接信息，该文件不会被提交到版本库。
-
-镜像使用 `dataease/sqlbot-embedded-demo:dev`，Dockerfile 中先构建前端产物并移动到 `backend/dist`，然后启动 Express 服务同时托管前端静态文件和 API。
 
 ## 注意事项
 
