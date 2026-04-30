@@ -29,9 +29,31 @@ const tokenController = {
       if (!configData) {
         throw new Error("no setting info!");
       }
-      const account = req.user?.account || 'developer'
-      const payload = { appId: configData.embedded_app_id, account }
-      const token = await generateJWT(payload, configData.embedded_app_secret )  
+      const requestedAppId = req.query.appId;
+      const account = configData.embedded_account || 'admin'
+      let resolvedAppId = configData.embedded_app_id;
+      let resolvedSecret = configData.embedded_app_secret;
+
+      if (requestedAppId) {
+        if (requestedAppId === configData.base_embedded_app_id) {
+          resolvedAppId = configData.base_embedded_app_id;
+          resolvedSecret = configData.base_embedded_app_secret;
+        } else if (requestedAppId === configData.advanced_embedded_app_id) {
+          resolvedAppId = configData.advanced_embedded_app_id;
+          resolvedSecret = configData.advanced_embedded_app_secret;
+        } else if (requestedAppId === configData.embedded_app_id) {
+          resolvedAppId = configData.embedded_app_id;
+          resolvedSecret = configData.embedded_app_secret;
+        } else {
+          return res.status(400).json({
+            success: false,
+            message: 'Unrecognized appId'
+          });
+        }
+      }
+
+      const payload = { appId: resolvedAppId, embeddedId: resolvedAppId, account }
+      const token = await generateJWT(payload, resolvedSecret )
       
       res.status(200).json({
         success: true,

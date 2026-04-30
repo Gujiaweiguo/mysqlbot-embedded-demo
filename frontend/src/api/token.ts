@@ -1,5 +1,5 @@
 import { request } from '@/utils/request'
 
 export const EmbeddedTokenApi = {
-  generage: () => request.get('/token')
+  generage: (appId?: string) => request.get('/token/', appId ? { params: { appId } } : undefined)
 }

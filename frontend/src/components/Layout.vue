@@ -13,7 +13,7 @@ const userStore = useUserStore()
 
 const router = useRouter()
 const route = useRoute()
-const activeIndex = ref(route.path)
+const activeIndex = computed(() => route.path)
 
 const dialogFormVisible = ref(false)
 
@@ -45,6 +45,14 @@ const handleCommand = async (command: string) => {
   if (command === 'login') {
     dialogFormVisible.value = true
   }
+}
+
+const resolveMenuIndex = (parentPath: string, childPath?: string) => {
+  return childPath ? `${parentPath}/${childPath}` : parentPath
+}
+
+const resolveSubMenuIndex = (routePath: string) => {
+  return `${routePath}__submenu`
 }
 
 // 添加移动端菜单滚动处理
@@ -79,7 +87,7 @@ const handleMenuScroll = (e: WheelEvent) => {
             >
                <template v-for="route in menuRoutes" :key="route.path">
                 <!-- 有子路由的菜单项 -->
-                <el-sub-menu v-if="route.children && route.children.length > 1" :index="route.path">
+                <el-sub-menu v-if="route.children && route.children.length > 1" :index="resolveSubMenuIndex(route.path)">
                   <template #title>
                     <el-icon v-if="route.meta?.icon">
                       <component :is="route.meta.icon" />
@@ -87,9 +95,9 @@ const handleMenuScroll = (e: WheelEvent) => {
                     {{ route.meta?.title }}
                   </template>
                   <el-menu-item 
-                    v-for="child in route.children" 
-                    :key="route.path + '/' + child.path"
-                    :index="route.path + '/' + child.path"
+                     v-for="child in route.children" 
+                    :key="resolveMenuIndex(route.path, child.path)"
+                    :index="resolveMenuIndex(route.path, child.path)"
                   >
                     {{ child.meta?.title }}
                   </el-menu-item>

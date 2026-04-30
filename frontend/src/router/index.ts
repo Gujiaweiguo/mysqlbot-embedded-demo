@@ -1,6 +1,9 @@
 import { createRouter, createWebHashHistory, type RouteRecordRaw } from 'vue-router'
 import Layout from '../components/Layout.vue'
 import Setting from '../views/setting/index.vue'
+import BaseAssistantSetting from '../views/setting/base-assistant.vue'
+import AdvancedAssistantSetting from '../views/setting/advanced-assistant.vue'
+import EmbeddedAssistantSetting from '../views/setting/embedded-assistant.vue'
 import FloatPage from '../views/assistant/float.vue'
 import FullPage from '../views/assistant/full.vue'
 import AdvancedFloatPage from '../views/advanced/float.vue'
@@ -28,7 +31,34 @@ const baseRoutes: RouteRecordRaw[] = [
       {
         path: '',
         name: 'setting',
+        meta: {
+          title: '通用设置'
+        },
         component: Setting
+      },
+      {
+        path: 'base-assistant',
+        name: 'baseAssistantSetting',
+        meta: {
+          title: '基础助手配置'
+        },
+        component: BaseAssistantSetting
+      },
+      {
+        path: 'advanced-assistant',
+        name: 'advancedAssistantSetting',
+        meta: {
+          title: '高级助手配置'
+        },
+        component: AdvancedAssistantSetting
+      },
+      {
+        path: 'embedded-assistant',
+        name: 'embeddedAssistantSetting',
+        meta: {
+          title: '嵌入式小助手配置'
+        },
+        component: EmbeddedAssistantSetting
       }
     ]
   }
@@ -117,6 +147,29 @@ const asyncRoutes: RouteRecordRaw[] = [
         component: EmbeddedDs
       }
     ]
+  },
+  {
+    path: '/assistant-embed',
+    component: Layout,
+    meta: {
+      title: '嵌入式小助手',
+      icon: 'Monitor',
+      requireAssistantEmbed: true
+    },
+    children: [
+      {
+        path: 'chat',
+        name: 'embeddedAssistantChat',
+        meta: { title: '问数页' },
+        component: () => import('../views/assistant-embed/base.vue')
+      },
+      {
+        path: 'datasource',
+        name: 'embeddedAssistantDatasource',
+        meta: { title: '数据源页' },
+        component: () => import('../views/assistant-embed/advanced.vue')
+      }
+    ]
   }
 ]
 
@@ -136,9 +189,28 @@ const filterAsyncRoutes = (routes: RouteRecordRaw[]) => {
     if (route.meta?.requireEmbedded && (!settingStore.getEmbeddedAppId || !settingStore.getEmbeddedAppSecret)) {
       return false
     }
+    if (route.meta?.requireAssistantEmbed) {
+      if (!hasDomain) {
+        return false
+      }
+      const hasEmbeddedAssistantChat = !!settingStore.getEmbeddedAssistantChatAppId && !!settingStore.getEmbeddedAssistantChatAppSecret
+      const hasEmbeddedAssistantDatasource = !!settingStore.getEmbeddedAssistantDatasourceAppId && !!settingStore.getEmbeddedAssistantDatasourceAppSecret
+      if (!hasEmbeddedAssistantChat && !hasEmbeddedAssistantDatasource) {
+        return false
+      }
+      route.children = route.children?.filter(child => {
+        if (child.name === 'embeddedAssistantChat') return hasEmbeddedAssistantChat
+        if (child.name === 'embeddedAssistantDatasource') return hasEmbeddedAssistantDatasource
+        return true
+      })
+      if (!route.children?.length) {
+        return false
+      }
+    }
     return true
   })
 }
+
 
 
 
