@@ -110,7 +110,7 @@ onMounted(() => {
         <el-form ref="formRef" :model="form" :rules="rules" label-position="top" status-icon>
           <div class="setting-page__grid">
             <el-form-item label="SQLBot 服务地址" prop="domain" class="setting-page__full">
-              <el-input v-model="form.domain" placeholder="例如：https://sqlbot.example.com" clearable />
+              <el-input v-model="form.domain" placeholder="例如：https://sqlbot.lanlnk.cn" clearable />
             </el-form-item>
 
             <el-form-item label="页面嵌入 APP ID" prop="embedded_app_id">
