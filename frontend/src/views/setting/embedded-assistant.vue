@@ -111,7 +111,8 @@ onMounted(() => {
             <div class="setting-page__panel-copy">
               <h3 class="setting-page__panel-title">问数页</h3>
               <p class="setting-page__panel-description">
-                配置嵌入式小助手“问数页”所需的页面嵌入 APP ID 与 APP Secret，用于加载对话型页面。
+                配置嵌入式小助手"问数页"所需的页面嵌入 APP ID 与 APP Secret，用于加载对话型页面。
+                如果"基础小助手"设置页已配置应用 ID，嵌入式问数页将优先使用基础小助手的链路进入对话，以便继承其默认数据源；未配置时才回退到本页的 APP ID 路由。
               </p>
             </div>
           </div>
