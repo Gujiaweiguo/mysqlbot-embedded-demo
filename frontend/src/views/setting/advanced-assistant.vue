@@ -63,6 +63,7 @@ const advancedBindingOverview = computed(() => {
       { label: '数据源 ID 列表', value: form.datasource_ids.length ? form.datasource_ids.join('、') : '无' },
       { label: '工作区 ID 列表', value: form.workspace_ids.length ? form.workspace_ids.join('、') : '无' },
       { label: '自动选择数据源', value: form.auto_ds ? '是' : '否' },
+      { label: '默认数据源', value: form.default_datasource_name ? `${form.default_datasource_name}（id=${form.default_datasource_id}）` : form.default_datasource_id ? `id=${form.default_datasource_id}` : '未配置' },
     ],
   }
 })

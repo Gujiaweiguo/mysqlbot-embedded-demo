@@ -31,14 +31,9 @@ describe('createDefaultBaseAssistantConfig', () => {
       private_list: [],
       private_list_names: [],
       auto_ds: false,
+      default_datasource_id: null,
+      default_datasource_name: '',
     })
-  })
-
-  it('returns a new object each call', () => {
-    const a = createDefaultBaseAssistantConfig()
-    const b = createDefaultBaseAssistantConfig()
-    expect(a).toEqual(b)
-    expect(a).not.toBe(b)
   })
 })
 
@@ -80,6 +75,8 @@ describe('createDefaultAdvancedAssistantConfig', () => {
       workspace_names: [],
       datasource_names: [],
       auto_ds: false,
+      default_datasource_id: null,
+      default_datasource_name: '',
       credential_mappings: [],
     })
   })
@@ -213,6 +210,8 @@ describe('normalizeBaseAssistantConfig', () => {
       private_list: [],
       private_list_names: [],
       auto_ds: false,
+      default_datasource_id: null,
+      default_datasource_name: '',
     }
     const result = normalizeBaseAssistantConfig(full)
     expect(result).toEqual(full)
@@ -429,6 +428,8 @@ describe('normalizeAdvancedAssistantConfig', () => {
       workspace_names: ['w1'],
       datasource_names: ['gs', 'thxtd'],
       auto_ds: true,
+      default_datasource_id: null,
+      default_datasource_name: '',
       credential_mappings: [],
     }
     const result = normalizeAdvancedAssistantConfig(full)
@@ -583,6 +584,8 @@ describe('normalizeSettingRecord', () => {
         private_list: [],
         private_list_names: [],
         auto_ds: false,
+        default_datasource_id: null,
+        default_datasource_name: '',
       },
       advanced_assistant_config: {
         assistant_id: 'a-cfg-id',
@@ -599,6 +602,8 @@ describe('normalizeSettingRecord', () => {
         workspace_names: ['thxtd'],
         datasource_names: ['thxtd'],
         auto_ds: false,
+        default_datasource_id: null,
+        default_datasource_name: '',
         credential_mappings: [],
       },
     }

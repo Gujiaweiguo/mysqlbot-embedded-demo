@@ -60,6 +60,8 @@ function backfillBaseConfig(row) {
     private_list: [],
     private_list_names: [],
     auto_ds: false,
+    default_datasource_id: null,
+    default_datasource_name: '',
   };
 }
 
@@ -82,6 +84,8 @@ function backfillAdvancedConfig(row) {
     workspace_names: [],
     datasource_names: [],
     auto_ds: false,
+    default_datasource_id: null,
+    default_datasource_name: '',
     credential_mappings: [],
   };
 }
@@ -128,6 +132,9 @@ async function enrichBaseAssistantConfig(config, assistantId) {
   const privateList = normalizeIdArray(config.private_list).length
     ? normalizeIdArray(config.private_list)
     : normalizeIdArray(remoteConfig.private_list || []);
+  const defaultDatasourceId = config.default_datasource_id != null
+    ? String(config.default_datasource_id)
+    : (remoteConfig.default_datasource_id != null ? String(remoteConfig.default_datasource_id) : null)
 
   return {
     ...config,
@@ -144,6 +151,8 @@ async function enrichBaseAssistantConfig(config, assistantId) {
     private_list: privateList,
     private_list_names: await getNamesByIds('core_datasource', privateList),
     auto_ds: typeof config.auto_ds === 'boolean' ? config.auto_ds : !!remoteConfig.auto_ds,
+    default_datasource_id: defaultDatasourceId,
+    default_datasource_name: defaultDatasourceId ? (await getNamesByIds('core_datasource', [defaultDatasourceId]))[0] || '' : '',
   };
 }
 
@@ -169,6 +178,9 @@ async function enrichAdvancedAssistantConfig(config, assistantId) {
   const datasourceIds = normalizeIdArray(config.datasource_ids).length
     ? normalizeIdArray(config.datasource_ids)
     : normalizeIdArray(remoteConfig.datasource_ids || []);
+  const defaultDatasourceId = config.default_datasource_id != null
+    ? String(config.default_datasource_id)
+    : (remoteConfig.default_datasource_id != null ? String(remoteConfig.default_datasource_id) : null)
 
   return {
     ...config,
@@ -185,6 +197,8 @@ async function enrichAdvancedAssistantConfig(config, assistantId) {
     workspace_names: await getNamesByIds('sys_workspace', workspaceIds),
     datasource_names: await getNamesByIds('core_datasource', datasourceIds),
     auto_ds: typeof config.auto_ds === 'boolean' ? config.auto_ds : !!remoteConfig.auto_ds,
+    default_datasource_id: defaultDatasourceId,
+    default_datasource_name: defaultDatasourceId ? (await getNamesByIds('core_datasource', [defaultDatasourceId]))[0] || '' : '',
     credential_mappings: Array.isArray(config.credential_mappings) && config.credential_mappings.length
       ? config.credential_mappings
       : Array.isArray(remoteConfig.certificate)

@@ -64,6 +64,7 @@ const bindingOverview = computed(() => {
     { label: '公开数据源', value: formatBindingList(config.public_list, config.public_list_names) },
     { label: '私有数据源', value: formatBindingList(config.private_list, config.private_list_names) },
     { label: '自动选择数据源', value: config.auto_ds ? '是' : '否' },
+    { label: '默认数据源', value: config.default_datasource_name ? `${config.default_datasource_name}（id=${config.default_datasource_id}）` : config.default_datasource_id ? `id=${config.default_datasource_id}` : '未配置' },
   ]
 })
 

@@ -17,6 +17,8 @@ export interface BaseAssistantConfig {
   private_list: string[]
   private_list_names: string[]
   auto_ds: boolean
+  default_datasource_id: string | null
+  default_datasource_name: string
 }
 
 export interface CredentialMapping {
@@ -42,6 +44,8 @@ export interface AdvancedAssistantConfig {
   workspace_names: string[]
   datasource_names: string[]
   auto_ds: boolean
+  default_datasource_id: string | null
+  default_datasource_name: string
   credential_mappings: CredentialMapping[]
 }
 
@@ -137,6 +141,8 @@ export const createDefaultBaseAssistantConfig = (): BaseAssistantConfig => ({
   private_list: [],
   private_list_names: [],
   auto_ds: false,
+  default_datasource_id: null,
+  default_datasource_name: '',
 })
 
 export const createDefaultCredentialMapping = (): CredentialMapping => ({
@@ -162,6 +168,8 @@ export const createDefaultAdvancedAssistantConfig = (): AdvancedAssistantConfig 
   workspace_names: [],
   datasource_names: [],
   auto_ds: false,
+  default_datasource_id: null,
+  default_datasource_name: '',
   credential_mappings: [],
 })
 
@@ -197,6 +205,8 @@ export const normalizeBaseAssistantConfig = (
   private_list: toIdArray(config?.private_list),
   private_list_names: toIdArray(config?.private_list_names),
   auto_ds: toBooleanValue(config?.auto_ds),
+  default_datasource_id: config?.default_datasource_id != null ? String(config.default_datasource_id) : null,
+  default_datasource_name: typeof config?.default_datasource_name === 'string' ? config.default_datasource_name : '',
 })
 
 export const normalizeCredentialMapping = (
@@ -229,6 +239,8 @@ export const normalizeAdvancedAssistantConfig = (
   workspace_names: toIdArray(config?.workspace_names),
   datasource_names: toIdArray(config?.datasource_names),
   auto_ds: toBooleanValue(config?.auto_ds),
+  default_datasource_id: config?.default_datasource_id != null ? String(config.default_datasource_id) : null,
+  default_datasource_name: typeof config?.default_datasource_name === 'string' ? config.default_datasource_name : '',
   credential_mappings: Array.isArray(config?.credential_mappings)
     ? config.credential_mappings.map((item) => normalizeCredentialMapping(item))
     : [],
