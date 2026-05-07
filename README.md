@@ -56,7 +56,7 @@ cd frontend && npm run dev
 - 前端：`5180`
 - 后端：`3100`
 
-后端配置文件为 `backend/.env`，可修改数据库连接信息和端口号。前端开发环境下 API 请求代理到后端的 `http://localhost:3100/api`。
+后端配置文件参考 `backend/.env.example`，使用时复制为 `backend/.env` 并填写实际值。前端开发环境下 API 请求代理到后端的 `http://localhost:3100/api`。
 
 ### 构建前端
 
@@ -132,6 +132,8 @@ sqlbot-embedded-demo/
 
 另外，独立的页面嵌入模式（`#/embedded/chat`、`#/embedded/ds`）也使用相同的 JWT 认证链路，凭据在通用设置中配置。
 
+> 问数页具有智能路由机制：若"基础小助手"已配置应用 ID，问数页将优先使用基础小助手的链路（iframe + postMessage 证书握手）进入对话，以继承其默认数据源配置；仅当未配置基础应用时才回退到本页的 APP ID + JWT 路径。
+
 ## 配置说明
 
 完整的配置操作步骤和各模式的认证流程说明，请参阅：
@@ -171,3 +173,4 @@ E2E 测试默认访问 `http://localhost:5180`，可通过 `E2E_BASE_URL` 环境
 - 本 Demo 的登录认证是本地演示逻辑（base64 编码的 token 匹配），不适用于生产环境
 - 对接真实宿主系统时，应替换登录态获取方式、数据源接口认证方式和页面嵌入 token 生成逻辑
 - 前端路由采用 hash history，菜单项根据配置动态注册，未配置对应凭据的菜单不会显示
+- 项目使用 `backend/.env.example` 作为环境变量模板，实际运行需复制为 `backend/.env` 并填写数据库凭据

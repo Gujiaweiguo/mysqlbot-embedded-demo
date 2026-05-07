@@ -350,6 +350,8 @@ http://YOUR_SERVER_IP:5180/#/setting/embedded-assistant
 
 填写完成后点击“保存嵌入式小助手配置”。
 
+注意：问数页具有智能路由机制。若“基础小助手”设置页已配置应用 ID（`base_assistant_id`），问数页将优先使用基础小助手的链路（iframe + postMessage 证书握手）进入对话，以继承其默认数据源配置；仅当未配置基础应用时才回退到本页的 APP ID + JWT 路径。因此，问数页 APP ID 仅在未配置基础小助手应用 ID 时生效。
+
 ## 6. 当前 Demo 的各功能访问入口
 
 当前前端菜单下可验证以下功能：
@@ -424,10 +426,12 @@ ${SQLBot服务地址}/xpack_static/sqlbot-embedded-dynamic.umd.js
 
 - `frontend/src/views/setting/embedded-assistant.vue`
 
-说明：
+问数页（base.vue）支持双路径机制：
 
-- 后端仍复用 `GET /api/token/`，根据传入 `appId` 自动匹配基础应用或高级应用的嵌入凭据。
-- 高级应用页面会附带 `busiFlag: 'ds'`。
+- **小助手 ID 路径（优先）**：若基础小助手设置页已配置 `base_assistant_id`，问数页将使用该 ID 通过 iframe + postMessage 证书握手（type 1）进入对话，无需调用后端 `/api/token/`，并继承基础小助手的默认数据源配置。
+- **APP ID 路径（回退）**：若未配置 `base_assistant_id`，则回退到使用本页配置的问数页 APP ID（`base_embedded_app_id`），通过后端 `/api/token/` 生成 JWT（type 4，附带 `busiFlag: 'ds'`）进入对话。
+
+数据源页（advanced.vue）保持不变，仍使用后端 `/api/token/` 生成 JWT。
 
 ## 8. 高级应用数据源接口（当前 Demo）
 
@@ -487,8 +491,10 @@ GET http://YOUR_SERVER_IP:3100/api/datasource/
 1. 在 SQLBot 中分别创建小助手嵌入所需的基础应用与高级应用
 2. 打开 `http://YOUR_SERVER_IP:5180/#/setting/embedded-assistant`
 3. 填写两组 APP ID / APP Secret 并保存
-4. 打开菜单“嵌入式小助手 -> 问数页 / 数据源页”
+4. 打开菜单"嵌入式小助手 -> 问数页 / 数据源页"
 5. 确认两页都能成功加载嵌入内容
+6. （可选）在基础小助手设置页配置 `base_assistant_id`，然后再次打开问数页，验证问数页走小助手 ID 路径（无 JWT 调用，直接 iframe + postMessage 证书握手）
+7. 移除基础小助手的 `base_assistant_id`，确认问数页回退到 APP ID + JWT 路径
 
 ## 10. 当前环境下最常见的问题
 
