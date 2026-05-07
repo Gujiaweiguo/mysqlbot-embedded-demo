@@ -132,9 +132,11 @@ async function enrichBaseAssistantConfig(config, assistantId) {
   const privateList = normalizeIdArray(config.private_list).length
     ? normalizeIdArray(config.private_list)
     : normalizeIdArray(remoteConfig.private_list || []);
-  const defaultDatasourceId = config.default_datasource_id != null
-    ? String(config.default_datasource_id)
-    : (remoteConfig.default_datasource_id != null ? String(remoteConfig.default_datasource_id) : null)
+  // auto_ds and default_datasource_id are read-only on the demo page;
+  // always prefer the value from sys_assistant.configuration (remoteConfig).
+  const defaultDatasourceId = remoteConfig.default_datasource_id != null
+    ? String(remoteConfig.default_datasource_id)
+    : (config.default_datasource_id != null ? String(config.default_datasource_id) : null)
 
   return {
     ...config,
@@ -150,7 +152,7 @@ async function enrichBaseAssistantConfig(config, assistantId) {
     public_list_names: await getNamesByIds('core_datasource', publicList),
     private_list: privateList,
     private_list_names: await getNamesByIds('core_datasource', privateList),
-    auto_ds: typeof config.auto_ds === 'boolean' ? config.auto_ds : !!remoteConfig.auto_ds,
+    auto_ds: remoteConfig.auto_ds != null ? !!remoteConfig.auto_ds : (typeof config.auto_ds === 'boolean' ? config.auto_ds : false),
     default_datasource_id: defaultDatasourceId,
     default_datasource_name: defaultDatasourceId ? (await getNamesByIds('core_datasource', [defaultDatasourceId]))[0] || '' : '',
   };
@@ -178,9 +180,11 @@ async function enrichAdvancedAssistantConfig(config, assistantId) {
   const datasourceIds = normalizeIdArray(config.datasource_ids).length
     ? normalizeIdArray(config.datasource_ids)
     : normalizeIdArray(remoteConfig.datasource_ids || []);
-  const defaultDatasourceId = config.default_datasource_id != null
-    ? String(config.default_datasource_id)
-    : (remoteConfig.default_datasource_id != null ? String(remoteConfig.default_datasource_id) : null)
+  // auto_ds and default_datasource_id are read-only on the demo page;
+  // always prefer the value from sys_assistant.configuration (remoteConfig).
+  const defaultDatasourceId = remoteConfig.default_datasource_id != null
+    ? String(remoteConfig.default_datasource_id)
+    : (config.default_datasource_id != null ? String(config.default_datasource_id) : null)
 
   return {
     ...config,
@@ -196,7 +200,7 @@ async function enrichAdvancedAssistantConfig(config, assistantId) {
     datasource_ids: datasourceIds,
     workspace_names: await getNamesByIds('sys_workspace', workspaceIds),
     datasource_names: await getNamesByIds('core_datasource', datasourceIds),
-    auto_ds: typeof config.auto_ds === 'boolean' ? config.auto_ds : !!remoteConfig.auto_ds,
+    auto_ds: remoteConfig.auto_ds != null ? !!remoteConfig.auto_ds : (typeof config.auto_ds === 'boolean' ? config.auto_ds : false),
     default_datasource_id: defaultDatasourceId,
     default_datasource_name: defaultDatasourceId ? (await getNamesByIds('core_datasource', [defaultDatasourceId]))[0] || '' : '',
     credential_mappings: Array.isArray(config.credential_mappings) && config.credential_mappings.length
